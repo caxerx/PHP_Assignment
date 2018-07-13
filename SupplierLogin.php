@@ -12,7 +12,7 @@ class SupplierLogin
     {
         session_start();
         if (isset($_SESSION['supplier'])) {
-            Response::OK(array("SupplierId" => $_SESSION['supplier']));
+            Response::OK(array("SupplierId" => $_SESSION['supplier'], "SupplierName" => $_SESSION['supplierName']));
         } else {
             Response::Fail("User is not logged in");
         }
@@ -30,7 +30,8 @@ class SupplierLogin
             if (count($row) > 0) {
                 session_start();
                 $_SESSION['supplier'] = $row[0]['SupplierId'];
-                Response::OK(array("SupplierId" => $_SESSION['supplier']));
+                $_SESSION['supplierName'] = $row[0]['Name'];
+                Response::OK(array("SupplierId" => $_SESSION['supplier'], "SupplierName" => $_SESSION['supplierName']));
             } else {
                 Response::Fail("Can't match any user record in database");
             }

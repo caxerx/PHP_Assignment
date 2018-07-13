@@ -48,11 +48,33 @@
                     <span class="hidden-sm-and-down">Food Ordering System</span>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn icon large>
-                    <v-avatar size="32px" tile>
-                        <v-icon dark>account_circle</v-icon>
-                    </v-avatar>
-                </v-btn>
+
+                <v-menu offset-y>
+                    <v-btn icon large slot="activator">
+                        <v-avatar size="32px" tile>
+                            <v-icon dark>account_circle</v-icon>
+                        </v-avatar>
+                    </v-btn>
+
+                    <v-list>
+                        <v-list-tile>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{SupplierName}}</v-list-tile-title>
+                                <v-list-tile-sub-title>Supplier</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-tooltip top>
+                                    <v-btn icon slot="activator"
+                                           @click="logout">
+                                        <v-icon>exit_to_app</v-icon>
+                                    </v-btn>
+                                    <span>Logout</span>
+                                </v-tooltip>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-list>
+                </v-menu>
+
             </v-toolbar>
             <!-- Top Toolbar end -->
 
@@ -207,7 +229,8 @@
     new Vue({
         el: '#app',
         data: () => ({
-            SupplierId: '', //Token of api auth
+            SupplierId: '',
+            SupplierName: '',
             dataLoading: false, //Loading state
             editDialog: false, //Edit dialog
             errorDialog: false, //Error dialog
@@ -259,6 +282,7 @@
             }
         },
 
+
         created() {
             axios({
                 method: 'get',
@@ -266,6 +290,7 @@
             }).then(res => {
                 if (res.data.success) {
                     this.SupplierId = res.data.data.SupplierId;
+                    this.SupplierName = res.data.data.SupplierName;
                     this.loadData();
                 } else {
                     window.location.href = 'supplier-login.html'
@@ -284,6 +309,14 @@
         },
 
         methods: {
+            logout() {
+                axios({
+                    method: 'get',
+                    url: 'Logout.php',
+                }).then(res => {
+                    window.location.href = 'supplier-login.html'
+                })
+            },
             loadData() {
                 this.dataLoading = true;
                 axios({
@@ -300,8 +333,6 @@
                         this.showError(res.data.responseContent.failType, res.data.responseContent.message)
                     }
                 })
-
-
             },
             editItem(item) {
                 this.editedOrder = item.OrderId;
