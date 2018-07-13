@@ -2,7 +2,7 @@
 require_once("Connection.php");
 require_once("Routes.php");
 require_once("Response.php");
-new Routes($conn, new SupplierOrder());
+new Routes($conn, new WarehouseOrder());
 
 
 class WarehouseOrder
@@ -10,7 +10,7 @@ class WarehouseOrder
     function get($conn)
     {
         session_start();
-        $stmt = $conn->prepare("SELECT Orders.OrderId, Stock.Name, Orders.Amount, Orders.PurchaseDate, Orders.DeliveryDate, Orders.ReceivedDate FROM `Orders` LEFT JOIN SupplierStock ON Orders.SupplierStockId = SupplierStock.SupplierStockId LEFT JOIN Stock ON SupplierStock.StockId = Stock.StockId LEFT JOIN Suppliers ON SupplierStock.SupplierId=Suppliers.SupplierId;");
+        $stmt = $conn->prepare("SELECT Orders.OrderId, Suppliers.Name as SupplierName, Stock.Name, Orders.Amount, Orders.PurchaseDate, Orders.DeliveryDate, Orders.ReceivedDate FROM `Orders` LEFT JOIN SupplierStock ON Orders.SupplierStockId = SupplierStock.SupplierStockId LEFT JOIN Stock ON SupplierStock.StockId = Stock.StockId LEFT JOIN Suppliers ON SupplierStock.SupplierId=Suppliers.SupplierId WHERE Orders.DeliveryDate IS NOT NULL;");
         $stmt->execute();
         if ($rs = $stmt->get_result()) {
             $row = $rs->fetch_all(MYSQLI_ASSOC);

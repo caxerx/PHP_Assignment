@@ -2,7 +2,7 @@
 
 require_once("Connection.php");
 require_once("Routes.php");
-new Routes(null, new ReTe());
+new Routes(null, new DefaultRole());
 
 
 class ReTe

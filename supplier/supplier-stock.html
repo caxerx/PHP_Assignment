@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Approved Order List</title>
+</head>
+
+<body>
+<style>
+    #app {
+        opacity: 0;
+    }
+
+    .inline-input {
+        border-bottom: solid grey 2px;
+        transition: border-bottom 0.25s;
+        font-size: 90%;
+    }
+
+    .inline-input:focus {
+        border-bottom: solid black 2px
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fadeIn(document.getElementById("app"))
+    }, false);
+
+    function fadeIn(el, display) {
+        el.style.opacity = 0;
+        el.style.display = display || "block";
+
+        (function fade() {
+            var val = parseFloat(el.style.opacity);
+            if (!((val += .2) > 1)) {
+                el.style.opacity = val;
+                requestAnimationFrame(fade);
+            }
+        })();
+    }
+</script>
+
+<link rel="stylesheet" href="../asset/css/material-icon.css">
+<link rel="stylesheet" href="../asset/css/vuetify.min.css">
+<link rel="stylesheet" href="../asset/css/roboto-font.css">
+
+<div id="app">
+    <v-app id="inspire">
+        <!-- Main page start -->
+        <div>
+
+            <!-- Nav Bar Start -->
+            <v-navigation-drawer
+                    fixed
+                    :clipped="$vuetify.breakpoint.smAndUp"
+                    v-model="drawer"
+                    app
+            >
+                <v-list class="pt-2">
+                    <v-list-tile v-for="nav in navs" :key="nav.title" :href="nav.href">
+                        <v-list-tile-action>
+                            <v-icon>{{ nav.icon }}</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>{{ nav.title }}</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
+            <!-- Nav Bar End -->
+
+            <!-- Top Toolbar start -->
+            <v-toolbar fixed app :clipped-left="$vuetify.breakpoint.smAndUp" color="primary" dark class="pr-4"
+                       style="z-index: 100" prominent>
+                <v-toolbar-title>
+                    <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+                    <span class="hidden-sm-and-down">Food Ordering System</span>
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+
+                <v-menu offset-y>
+                    <v-btn icon large slot="activator">
+                        <v-avatar size="32px" tile>
+                            <v-icon dark>account_circle</v-icon>
+                        </v-avatar>
+                    </v-btn>
+
+                    <v-list>
+                        <v-list-tile>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{SupplierName}}</v-list-tile-title>
+                                <v-list-tile-sub-title>Supplier</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-tooltip top>
+                                    <v-btn icon slot="activator"
+                                           @click="logout">
+                                        <v-icon>exit_to_app</v-icon>
+                                    </v-btn>
+                                    <span>Logout</span>
+                                </v-tooltip>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-list>
+                </v-menu>
+
+            </v-toolbar>
+            <!-- Top Toolbar end -->
+
+
+            <!-- Page content start -->
+            <v-content>
+                <v-toolbar dense flat color="grey lighten-3">
+                    <v-breadcrumbs>
+                        <v-icon slot="divider">chevron_right</v-icon>
+                        <v-breadcrumbs-item>
+                            Supplier
+                        </v-breadcrumbs-item>
+                        <v-breadcrumbs-item>
+                            Approved Order
+                        </v-breadcrumbs-item>
+                    </v-breadcrumbs>
+                    <!--
+                    <v-spacer></v-spacer>
+                    <span class="mr-3">{{ datetime }}</span>-->
+                </v-toolbar>
+                <v-container>
+
+                    <h1 class="display-1 primary--text mb-3">Supplier Stock</h1>
+                    <!-- Table toolbar start -->
+                    <div>
+                        <v-toolbar dark color="primary" class="elevation-0">
+                            <v-toolbar-title class="white--text hidden-xs-only">Supplier Stock List
+                            </v-toolbar-title>
+                            <v-text-field
+                                    hide-details
+                                    flat
+                                    solo-inverted
+                                    prepend-inner-icon="search"
+                                    label="Search"
+                                    class="ml-5"
+                                    v-model="search"
+                            ></v-text-field>
+                            <v-spacer></v-spacer>
+
+                            <v-btn icon @click="showAdd()">
+                                <v-icon v-if="!stockLoading">add</v-icon>
+                            </v-btn>
+
+
+                            <v-btn icon @click="loadData()">
+                                <v-icon v-if="!dataLoading">refresh</v-icon>
+                                <v-progress-circular
+                                        v-if="dataLoading"
+                                        indeterminate
+                                        color="white"
+                                        :size="25"
+                                        :width="3"
+                                ></v-progress-circular>
+                            </v-btn>
+
+
+                        </v-toolbar>
+                    </div>
+                    <!-- Table toolbar end -->
+
+
+                    <!-- Table start -->
+                    <v-data-table :headers="headers" :items="supplierStock" hide-actions class="elevation-1"
+                                  :search="search"
+                                  :pagination.sync="pagination">
+                        <template slot="items" slot-scope="props">
+                            <td>{{ props.item.SupplierStockId }}</td>
+                            <td>{{ props.item.StockId }}</td>
+                            <td>{{ props.item.Name }}</td>
+                            <td>{{ props.item.Amount }}</td>
+                            <td class="layout px-0">
+                                <v-btn icon class="mx-0" @click="deleteStock(props.item)">
+                                    <v-icon color="pink">delete</v-icon>
+                                </v-btn>
+                            </td>
+                        </template>
+
+                        <template slot="no-data">
+                            <div class="text-xs-center">No records found</div>
+                        </template>
+                    </v-data-table>
+                    <!-- Table end -->
+
+                    <v-dialog v-model="addDialog" max-width="800">
+                        <v-toolbar dark color="primary" class="elevation-0">
+                            <v-toolbar-title class="white--text hidden-xs-only">Stock List
+                            </v-toolbar-title>
+                            <v-text-field
+                                    hide-details
+                                    flat
+                                    solo-inverted
+                                    prepend-inner-icon="search"
+                                    label="Search"
+                                    class="ml-5"
+                                    v-model="stockSearch"
+                            ></v-text-field>
+                            <v-spacer></v-spacer>
+                            <v-btn icon @click="loadStock()">
+                                <v-icon v-if="!stockLoading">refresh</v-icon>
+                                <v-progress-circular
+                                        v-if="stockLoading"
+                                        indeterminate
+                                        color="white"
+                                        :size="25"
+                                        :width="3"
+                                ></v-progress-circular>
+                            </v-btn>
+
+                        </v-toolbar>
+
+
+                        <!-- Table start -->
+                        <v-data-table :headers="stockHeaders" :items="stocks" class="elevation-1"
+                                      :search="stockSearch">
+                            <template slot="items" slot-scope="props">
+                                <td>{{ props.item.StockId }}</td>
+                                <td>{{ props.item.Name }}</td>
+                                <td class="layout px-0">
+                                    <v-input style="max-width: 80px" class="ma-2">
+                                        <input class="pa-1 inline-input" type="number"
+                                               placeholder="Amount"
+                                               style="width: 100%;"
+                                               min="0"
+                                               v-model="props.item.amount"
+                                        >
+                                    </v-input>
+                                    <v-btn icon class="mx-0" @click="addStock(props.item)">
+                                        <v-icon color="teal">add</v-icon>
+                                    </v-btn>
+                                </td>
+                            </template>
+
+                            <template slot="no-data">
+                                <div class="text-xs-center">No records found</div>
+                            </template>
+                        </v-data-table>
+                        <!-- Table end -->
+                    </v-dialog>
+
+                </v-container>
+
+            </v-content>
+            <!-- Page content end -->
+
+        </div>
+        <!-- Main page end -->
+
+
+        <v-dialog
+                v-model="confirmDialog"
+                max-width="300"
+        >
+            <v-card>
+                <v-card-title class="headline">Delete Stock</v-card-title>
+
+                <v-card-text>
+                    Are you sure to delete the stock? This action is irreversible.
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+
+                    <v-btn
+                            color="green darken-1"
+                            flat="flat"
+                            @click="confirmDialog = false"
+                    >
+                        Cancel
+                    </v-btn>
+
+                    <v-btn
+                            color="green darken-1"
+                            flat="flat"
+                            @click="confirmDelete()"
+                    >
+                        Delete
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+
+        <!-- Error Dialog start -->
+        <v-dialog v-model="errorDialog" max-width="300">
+            <v-card>
+                <v-card-title class="headline">Request Failed</v-card-title>
+                <v-card-text>{{errorMessage}}</v-card-text>
+                <v-card-actions>
+                    <!--<v-spacer></v-spacer>-->
+                    <v-btn color="green darken-1" flat @click.native="errOk">Ok</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <!-- Error Dialog start -->
+    </v-app>
+</div>
+
+</body>
+
+<script src="../asset/js/vue.js"></script>
+<script src="../asset/js/vuetify.js"></script>
+<script src="../asset/js/axios.js"></script>
+
+
+<script>
+    new Vue({
+        el: '#app',
+        data: () => ({
+            SupplierId: '',
+            SupplierName: '',
+            drawer: true,
+            dataLoading: false, //Loading state
+            stockLoading: false, //Loading state
+            addDialog: false, //Add dialog
+            errorDialog: false, //Error dialog
+            confirmDialog: false,
+            search: "",
+            stockSearch: "",
+            errorMessage: "",
+            pagination: {'sortBy': 'SupplierStockId', 'descending': true},
+            navs: [],
+            headers: [
+                {
+                    text: 'Id',
+                    align: 'left',
+                    value: 'SupplierStockId'
+                }, {
+                    text: 'Stock Id',
+                    value: 'StockId'
+                }, {
+                    text: 'Stock Name',
+                    value: 'Name'
+                }, {
+                    text: 'Amount',
+                    value: 'Amount'
+                }, {
+                    text: 'Actions',
+                    value: 'name',
+                    sortable: false
+                }
+            ],
+
+            stockHeaders: [
+                {
+                    text: 'Stock Id',
+                    align: 'left',
+                    value: 'StockId'
+                }, {
+                    text: 'Stock Name',
+                    value: 'Name'
+                }, {
+                    text: 'Actions',
+                    value: 'name',
+                    sortable: false
+                }
+            ],
+            stocks: [],
+            supplierStock: [],
+            itemToDelete: {}
+
+        }),
+
+        watch: {
+            addDialog(val) {
+                val || this.close()
+            }
+        },
+
+
+        created() {
+            axios({
+                method: 'get',
+                url: '../api/SupplierLogin.php'
+            }).then(res => {
+                if (res.data.success) {
+                    this.SupplierId = res.data.data.SupplierId;
+                    this.SupplierName = res.data.data.SupplierName;
+                    this.loadData();
+                } else {
+                    window.location.href = '../index.html'
+                }
+            });
+
+            axios({
+                method: 'get',
+                url: '../api/NavBar.php'
+            }).then(res => {
+                if (res.data.success) {
+                    this.navs = res.data.data;
+                }
+            })
+
+        },
+
+        methods: {
+
+            confirmDelete() {
+                axios({
+                    method: 'delete',
+                    url: '../api/SupplierSupplierStock.php',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {SupplierStockId: this.itemToDelete.SupplierStockId}
+                }).then(res => {
+                    if (res.data.success) {
+                        this.loadData();
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                });
+                this.confirmDialog = false;
+            },
+
+            deleteStock(item) {
+                this.itemToDelete = item;
+                this.confirmDialog = true;
+            },
+
+            showAdd() {
+                this.loadStock();
+                this.addDialog = true;
+            },
+
+            logout() {
+                axios({
+                    method: 'get',
+                    url: '../api/Logout.php',
+                }).then(res => {
+                    window.location.href = '../index.html'
+                })
+            },
+
+            loadStock() {
+                this.stockLoading = true;
+                axios({
+                    method: 'get',
+                    url: '../api/SupplierStock.php',
+                }).then(res => {
+                    setTimeout(() => {
+                        this.stockLoading = false;
+                    }, 300);
+                    if (res.data.success) {
+                        this.stocks = res.data.data;
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                })
+            },
+
+            loadData() {
+                this.dataLoading = true;
+                axios({
+                    method: 'get',
+                    url: '../api/SupplierSupplierStock.php',
+                }).then(res => {
+                    setTimeout(() => {
+                        this.dataLoading = false;
+                    }, 300);
+                    if (res.data.success) {
+                        this.supplierStock = res.data.data;
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                })
+            },
+            addStock(item) {
+                if (!item.amount || item.amount == 0) {
+                    return
+                }
+                axios({
+                    method: 'post',
+                    url: '../api/SupplierSupplierStock.php',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {StockId: item.StockId, Amount: item.amount}
+                }).then(res => {
+                    if (res.data.success) {
+                        this.loadData();
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                });
+                this.close()
+            },
+
+            showError(message) {
+                this.errorMessage = message;
+                this.errorDialog = true
+            },
+            errOk() {
+                this.errorDialog = false
+            },
+
+            addItem() {
+                this.editDialog = true;
+            },
+
+            close() {
+                this.addDialog = false;
+            },
+
+        }
+    })
+</script>
+
+</html>

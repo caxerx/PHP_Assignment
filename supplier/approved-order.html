@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Approved Order List</title>
+</head>
+
+<body>
+
+<style>
+    #app {
+        opacity: 0;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fadeIn(document.getElementById("app"))
+    }, false);
+
+    function fadeIn(el, display) {
+        el.style.opacity = 0;
+        el.style.display = display || "block";
+
+        (function fade() {
+            var val = parseFloat(el.style.opacity);
+            if (!((val += .2) > 1)) {
+                el.style.opacity = val;
+                requestAnimationFrame(fade);
+            }
+        })();
+    }
+</script>
+
+<link rel="stylesheet" href="../asset/css/material-icon.css">
+<link rel="stylesheet" href="../asset/css/vuetify.min.css">
+<link rel="stylesheet" href="../asset/css/roboto-font.css">
+
+<div id="app">
+    <v-app id="inspire">
+        <!-- Main page start -->
+        <div>
+
+            <!-- Nav Bar Start -->
+            <v-navigation-drawer
+                    fixed
+                    :clipped="$vuetify.breakpoint.smAndUp"
+                    v-model="drawer"
+                    app
+            >
+                <v-list class="pt-2">
+                    <v-list-tile v-for="nav in navs" :key="nav.title" :href="nav.href">
+                        <v-list-tile-action>
+                            <v-icon>{{ nav.icon }}</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>{{ nav.title }}</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
+            <!-- Nav Bar End -->
+
+            <!-- Top Toolbar start -->
+            <v-toolbar fixed app :clipped-left="$vuetify.breakpoint.smAndUp" color="primary" dark class="pr-4"
+                       style="z-index: 100" prominent>
+                <v-toolbar-title>
+                    <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+                    <span class="hidden-sm-and-down">Food Ordering System</span>
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+
+                <v-menu offset-y>
+                    <v-btn icon large slot="activator">
+                        <v-avatar size="32px" tile>
+                            <v-icon dark>account_circle</v-icon>
+                        </v-avatar>
+                    </v-btn>
+
+                    <v-list>
+                        <v-list-tile>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{SupplierName}}</v-list-tile-title>
+                                <v-list-tile-sub-title>Supplier</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-tooltip top>
+                                    <v-btn icon slot="activator"
+                                           @click="logout">
+                                        <v-icon>exit_to_app</v-icon>
+                                    </v-btn>
+                                    <span>Logout</span>
+                                </v-tooltip>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-list>
+                </v-menu>
+
+            </v-toolbar>
+            <!-- Top Toolbar end -->
+
+
+            <!-- Page content start -->
+            <v-content>
+                <v-toolbar dense flat color="grey lighten-3">
+                    <v-breadcrumbs>
+                        <v-icon slot="divider">chevron_right</v-icon>
+                        <v-breadcrumbs-item>
+                            Supplier
+                        </v-breadcrumbs-item>
+                        <v-breadcrumbs-item>
+                            Approved Order
+                        </v-breadcrumbs-item>
+                    </v-breadcrumbs>
+                    <!--
+                    <v-spacer></v-spacer>
+                    <span class="mr-3">{{ datetime }}</span>-->
+                </v-toolbar>
+                <v-container>
+
+                    <h1 class="display-1 primary--text mb-3">Approved Order</h1>
+                    <!-- Table toolbar start -->
+                    <div>
+                        <v-toolbar dark color="primary" class="elevation-0">
+                            <v-toolbar-title class="white--text hidden-xs-only">Approved Order List</v-toolbar-title>
+                            <v-text-field
+                                    hide-details
+                                    flat
+                                    solo-inverted
+                                    prepend-inner-icon="search"
+                                    label="Search"
+                                    class="ml-5"
+                                    v-model="search"
+                            ></v-text-field>
+                            <v-spacer></v-spacer>
+
+                            <v-btn icon @click="loadData()">
+                                <v-icon v-if="!dataLoading">refresh</v-icon>
+                                <v-progress-circular
+                                        v-if="dataLoading"
+                                        indeterminate
+                                        color="white"
+                                        :size="25"
+                                        :width="3"
+                                ></v-progress-circular>
+                            </v-btn>
+
+
+                        </v-toolbar>
+                    </div>
+                    <!-- Table toolbar end -->
+
+
+                    <!-- Table start -->
+                    <v-data-table :headers="headers" :items="orders" hide-actions class="elevation-1" :search="search"
+                                  :pagination.sync="pagination">
+                        <template slot="items" slot-scope="props">
+                            <td>{{ props.item.OrderId }}</td>
+                            <td>{{ props.item.Name }}</td>
+                            <td>{{ props.item.Amount }}</td>
+                            <td>{{ props.item.PurchaseDate }}</td>
+                            <td>{{ props.item.DeliveryDate }}</td>
+                            <td>{{ props.item.ReceivedDate }}</td>
+                            <td class="layout px-0">
+                                <v-btn icon class="mx-0" @click="editItem(props.item)">
+                                    <v-icon color="teal">local_shipping</v-icon>
+                                </v-btn>
+                            </td>
+                        </template>
+
+                        <template slot="no-data">
+                            <div class="text-xs-center">No records found</div>
+                        </template>
+                    </v-data-table>
+                    <!-- Table end -->
+                </v-container>
+                <!-- Edit Dialog start -->
+                <v-dialog v-model="editDialog" max-width="500px">
+                    <v-form @submit.prevent="save" ref="form" v-model="valid" lazy-validation>
+                        <v-card>
+                            <v-card-title>
+                                <span class="headline">Update Order</span>
+                            </v-card-title>
+                            <v-card-text>
+                                <v-container fluid>
+
+
+                                    <v-layout row>
+                                        <v-flex xs4>
+                                            <v-subheader>Delivery Date</v-subheader>
+                                        </v-flex>
+                                        <v-flex xs8>
+
+                                            <v-menu
+                                                    ref="datePicker"
+                                                    :close-on-content-click="false"
+                                                    v-model="datePicker"
+                                                    :nudge-right="40"
+                                                    lazy
+                                                    transition="scale-transition"
+                                                    offset-y
+                                                    full-width
+                                                    max-width="290px"
+                                                    min-width="290px"
+                                            >
+                                                <v-text-field
+                                                        slot="activator"
+                                                        v-model="deliveryDate"
+                                                        label="Date"
+                                                        persistent-hint
+                                                        prepend-icon="event"
+                                                        :rules="dateRules"
+                                                        required
+                                                ></v-text-field>
+                                                <v-date-picker v-model="deliveryDate"
+                                                               :max="today"
+                                                               :allowed-dates="allowedDates"
+                                                               @input="datePicker = false"></v-date-picker>
+                                            </v-menu>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-container>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="blue darken-1" flat @click.native="close">Cancel</v-btn>
+                                <v-btn color="blue darken-1" flat type="submit">Save</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-form>
+                </v-dialog>
+                <!-- Edit Dialog end -->
+
+            </v-content>
+            <!-- Page content end -->
+
+        </div>
+        <!-- Main page end -->
+
+        <!-- Error Dialog start -->
+        <v-dialog v-model="errorDialog" max-width="290">
+            <v-card>
+                <v-card-title class="headline">Request Failed</v-card-title>
+                <v-card-text>{{errorMessage}}</v-card-text>
+                <v-card-actions>
+                    <!--<v-spacer></v-spacer>-->
+                    <v-btn color="green darken-1" flat @click.native="errOk">Ok</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <!-- Error Dialog start -->
+    </v-app>
+</div>
+
+</body>
+
+<script src="../asset/js/vue.js"></script>
+<script src="../asset/js/vuetify.js"></script>
+<script src="../asset/js/axios.js"></script>
+<script src="../asset/js/moment.js"></script>
+
+
+<script>
+    new Vue({
+        el: '#app',
+        data: () => ({
+            SupplierId: '',
+            SupplierName: '',
+            drawer: true,
+            dataLoading: false, //Loading state
+            editDialog: false, //Edit dialog
+            errorDialog: false, //Error dialog
+            datePicker: false,
+            search: "",
+            errorMessage: "",
+            pagination: {
+                'sortBy': 'OrderId',
+                'descending': true
+            },
+            navs: [],
+            headers: [
+                {
+                    text: 'Order Id',
+                    align: 'left',
+                    value: 'OrderId'
+                },
+                {
+                    text: 'Stock Name',
+                    value: 'Name'
+                },
+                {
+                    text: 'Amount',
+                    value: 'Amount'
+                },
+                {
+                    text: 'Purchase Date',
+                    value: 'PurchaseDate'
+                },
+                {
+                    text: 'Delivery Date',
+                    value: 'DeliveryDate'
+                },
+                {
+                    text: 'Received Date',
+                    value: 'ReceivedDate'
+                },
+                {
+                    text: 'Actions',
+                    value: 'name',
+                    sortable: false
+                }
+            ],
+            orders: [],
+            editedOrder: -1,
+            deliveryDate: "",
+            valid: true,
+            dateRules: [
+                v => !!v || "Date is required",
+                v => moment(v, 'YYYY-MM-DD', true).isValid() || "Please enter a valid date",
+                v => (moment(v, 'YYYY-MM-DD', true).isValid() && moment() > moment(v)) || "The date cannot be future"
+            ]
+        }),
+        watch: {
+            editDialog(val) {
+                val || this.close()
+            }
+        },
+        created() {
+            axios({
+                method: 'get',
+                url: '../api/SupplierLogin.php'
+            }).then(res => {
+                if (res.data.success) {
+                    this.SupplierId = res.data.data.SupplierId;
+                    this.SupplierName = res.data.data.SupplierName;
+                    this.loadData();
+                } else {
+                    window.location.href = '../index.html'
+                }
+            });
+
+            axios({
+                method: 'get',
+                url: '../api/NavBar.php'
+            }).then(res => {
+                if (res.data.success) {
+                    this.navs = res.data.data;
+                }
+            })
+
+        },
+        computed: {
+            today() {
+                return moment().format("YYYY-MM-DD");
+            }
+        },
+        methods: {
+            allowedDates(date) {
+                return moment() > moment(date);
+            },
+            logout() {
+                axios({
+                    method: 'get',
+                    url: '../api/Logout.php',
+                }).then(res => {
+                    window.location.href = '../index.html'
+                })
+            }
+            ,
+            loadData() {
+                this.dataLoading = true;
+                axios({
+                    method: 'get',
+                    url: '../api/SupplierOrder.php',
+                }).then(res => {
+                    setTimeout(() => {
+                        this.dataLoading = false;
+                    }, 300);
+                    if (res.data.success) {
+                        this.orders = res.data.data;
+                        for (let i = 0; i < this.orders.length; i++) {
+                            let order = this.orders[i];
+                            if (!order.PurchaseDate) {
+                                this.orders[i].PurchaseDate = "Waiting"
+                            }
+                            if (!order.ReceivedDate) {
+                                this.orders[i].ReceivedDate = "Waiting"
+                            }
+                            if (!order.DeliveryDate) {
+                                this.orders[i].DeliveryDate = "Waiting"
+                            }
+                        }
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                })
+            },
+            editItem(item) {
+                this.editedOrder = item.OrderId;
+                this.deliveryDate = item.DeliveryDate;
+                if (item.DeliveryDate == "Waiting") {
+                    this.deliveryDate = "";
+                }
+                this.$refs.form.reset();
+                this.editDialog = true
+            },
+            showError(message) {
+                this.errorMessage = message;
+                this.errorDialog = true
+            },
+            errOk() {
+                this.errorDialog = false
+            },
+
+            addItem() {
+                this.editDialog = true;
+            },
+
+            close() {
+                this.editDialog = false;
+                this.$refs.form.reset();
+                setTimeout(() => {
+                    this.deliveryDate = "";
+                    this.editedIndex = -1;
+                }, 300)
+            },
+
+            save() {
+                if (!this.$refs.form.validate()) {
+                    return;
+                }
+                axios({
+                    method: 'patch',
+                    url: '../api/SupplierOrder.php',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {OrderId: this.editedOrder, DeliveryDate: this.deliveryDate}
+                }).then(res => {
+                    if (res.data.success) {
+                        this.loadData();
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                });
+                this.close()
+            }
+        }
+    })
+</script>
+
+</html>

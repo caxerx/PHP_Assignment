@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+
+
+<style>
+    #app {
+        opacity: 0;
+    }
+</style>
+
+<script>
+    function fadeIn(el, display) {
+        el.style.opacity = 0;
+        el.style.display = display || "block";
+
+        (function fade() {
+            var val = parseFloat(el.style.opacity);
+            if (!((val += .2) > 1)) {
+                el.style.opacity = val;
+                requestAnimationFrame(fade);
+            }
+        })();
+    }
+</script>
+
+
+<body>
+
+
+<link rel="stylesheet" href="asset/css/material-icon.css">
+<link rel="stylesheet" href="asset/css/vuetify.min.css">
+<link rel="stylesheet" href="asset/css/roboto-font.css">
+
+<div id="app">
+    <v-app id="inspire">
+        <!-- Login page start -->
+        <v-content>
+            <v-container fluid fill-height>
+                <v-layout align-center justify-center>
+                    <v-flex xs12 sm8 md4>
+                        <v-card class="elevation-12" style="max-width: 450px">
+                            <v-toolbar dark color="primary" prominent>
+                                <v-toolbar-title>{{role}} Login</v-toolbar-title>
+                                <v-spacer></v-spacer>
+
+                                <v-btn icon @click="switchRole">
+                                    <v-icon>swap_horiz</v-icon>
+                                </v-btn>
+
+                            </v-toolbar>
+                            <v-form @submit.prevent="login" ref="form" v-model="valid" lazy-validation>
+                                <v-card-text>
+                                    <v-text-field prepend-icon="person" name="login" :label="role+' Id'" type="text"
+                                                  v-model="loginInfo.UserId" required
+                                                  :rules="userIdRules"
+                                    ></v-text-field>
+                                    <v-text-field id="password" prepend-icon="lock" name="password" label="Password"
+                                                  type="password" v-model="loginInfo.Password"
+                                                  autocomplete="current-password" required
+                                                  :rules="passwordRules"
+                                    ></v-text-field>
+                                </v-card-text>
+                                <v-card-actions>
+                                    <p class="ml-3 red--text" v-if="loginFailed">Login failed</p>
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="primary" type="submit">Login</v-btn>
+                                </v-card-actions>
+                            </v-form>
+                        </v-card>
+                    </v-flex>
+                </v-layout>
+            </v-container>
+        </v-content>
+        <!-- Login page end -->
+    </v-app>
+</div>
+
+</body>
+
+<script src="asset/js/vue.js"></script>
+<script src="asset/js/vuetify.js"></script>
+<script src="asset/js/axios.js"></script>
+
+
+<script>
+    new Vue({
+        el: '#app',
+        data: () => ({
+            role: "Supplier",
+            loginFailed: false,
+            valid: true,
+            loginInfo: { //Object reserve to submit login request
+                UserId: '',
+                Password: ''
+            },
+            passwordRules: [
+                v => !!v || 'Password is required'
+            ],
+            userIdRules: [v => !!v || "User Id is required"],
+        }),
+
+        created() {
+            axios({
+                method: 'get',
+                url: 'api/DefaultRole.php'
+            }).then(res => {
+                if (res.data.success) {
+                    if (res.data.data.DefaultRole == "Supplier") {
+                        this.setRole("Supplier");
+                        axios({
+                            method: 'get',
+                            url: 'api/SupplierLogin.php'
+                        }).then(res => {
+                            if (res.data.success) {
+                                window.location.href = 'supplier/approved-order.html'
+                            }
+                        })
+                    } else {
+                        this.setRole("Warehouse Staff");
+                        axios({
+                            method: 'get',
+                            url: 'api/WarehouseStaffLogin.php'
+                        }).then(res => {
+                            if (res.data.success) {
+                                window.location.href = 'warehouse/delivery-order.html'
+                            }
+                        })
+                    }
+                    setTimeout(() => {
+                        fadeIn(document.getElementById('app'))
+                    }, 150)
+                }
+            });
+        },
+
+        methods: {
+            setRole(role) {
+                this.role = role;
+                if (this.role == 'Warehouse Staff') {
+                    this.$vuetify.theme.primary = '#800080';
+                } else {
+                    this.$vuetify.theme.primary = '#1976d2';
+                }
+
+                axios({
+                    method: 'post',
+                    url: 'api/DefaultRole.php',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {DefaultRole: role}
+                })
+            },
+            switchRole() {
+                if (this.role == 'Supplier') {
+                    this.setRole("Warehouse Staff");
+                } else {
+                    this.setRole("Supplier");
+                }
+            },
+            loginRequest() {
+                if (this.role == "Supplier") {
+                    axios({
+                        method: 'post',
+                        url: 'api/SupplierLogin.php',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        data: {SupplierId: this.loginInfo.UserId, Password: this.loginInfo.Password}
+                    }).then(res => {
+                        if (res.data.success) {
+                            window.location.href = 'supplier/approved-order.html'
+                        } else {
+                            this.loginFailed = true;
+                        }
+                    })
+                } else {
+                    axios({
+                        method: 'post',
+                        url: 'api/WarehouseStaffLogin.php',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        data: {WarehouseStaffId: this.loginInfo.UserId, Password: this.loginInfo.Password}
+                    }).then(res => {
+                        if (res.data.success) {
+                            window.location.href = 'warehouse/delivery-order.html'
+                        } else {
+                            this.loginFailed = true;
+                        }
+                    })
+                }
+            },
+            login() {
+                if (!this.$refs.form.validate()) {
+                    return;
+                }
+                this.loginRequest();
+            }
+        }
+    });
+
+</script>
+
+</html>
