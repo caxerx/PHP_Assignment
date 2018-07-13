@@ -9,7 +9,7 @@ class Routes
         if ($method === 'GET') {
             $request_data = $_GET;
         } else {
-            $request_data = json_decode(file_get_contents('php://input'), TRUE);
+            $request_data = json_decode(file_get_contents('php://input'), true);
         }
         $route_obj->{$method}($conn, $request_data);
     }

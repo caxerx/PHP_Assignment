@@ -3,18 +3,25 @@
 require_once("Connection.php");
 require_once("Routes.php");
 require_once("Response.php");
-new Routes($conn, new Login());
+new Routes($conn, new SupplierLogin());
 
 
-class Login
+class SupplierLogin
 {
-    function get($c, $d)
+    function get($conn)
     {
-        echo "get";
+        session_start();
+        if (isset($_SESSION['supplier'])) {
+            Response::OK(array("SupplierId" => $_SESSION['supplier']));
+        } else {
+            Response::Fail("User is not logged in");
+        }
     }
 
     function post($conn, $data)
     {
+        session_start();
+        session_destroy();
         $stmt = $conn->prepare("SELECT * FROM Suppliers WHERE SupplierId = ? AND Password = ?;");
         $stmt->bind_param("is", $data["SupplierId"], $data["Password"]);
         $stmt->execute();
@@ -25,7 +32,7 @@ class Login
                 $_SESSION['supplier'] = $row[0]['SupplierId'];
                 Response::OK(array("SupplierId" => $_SESSION['supplier']));
             } else {
-                Response::Unauthorized();
+                Response::Fail("Can't match any user record in database");
             }
         }
     }
