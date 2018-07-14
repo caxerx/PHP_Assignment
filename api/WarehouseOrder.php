@@ -1,7 +1,12 @@
 <?php
+require_once("Response.php");
+session_start();
+if (!isset($_SESSION['warehouse'])) {
+    Response::Unauthorized();
+}
+
 require_once("Connection.php");
 require_once("Routes.php");
-require_once("Response.php");
 new Routes($conn, new WarehouseOrder());
 
 
