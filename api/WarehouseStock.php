@@ -14,7 +14,7 @@ class WarehouseStock
 {
     function get($conn)
     {
-        $stmt = $conn->prepare("SELECT `StockId`,`Name` FROM Stock;");
+        $stmt = $conn->prepare("SELECT `StockId`,Managers.Name as 'ManagerName', Stock.Name as Name FROM Stock LEFT JOIN Managers ON Stock.ManagerId = Managers.ManagerId;");
         $stmt->execute();
         if ($rs = $stmt->get_result()) {
             $row = $rs->fetch_all(MYSQLI_ASSOC);

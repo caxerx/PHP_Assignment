@@ -7,41 +7,9 @@
 </head>
 
 <body>
-<style>
-    #app {
-        opacity: 0;
-    }
 
-    .inline-input {
-        border-bottom: solid grey 2px;
-        transition: border-bottom 0.25s;
-        font-size: 90%;
-    }
-
-    .inline-input:focus {
-        border-bottom: solid black 2px
-    }
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        fadeIn(document.getElementById("app"))
-    }, false);
-
-    function fadeIn(el, display) {
-        el.style.opacity = 0;
-        el.style.display = display || "block";
-
-        (function fade() {
-            var val = parseFloat(el.style.opacity);
-            if (!((val += .2) > 1)) {
-                el.style.opacity = val;
-                requestAnimationFrame(fade);
-            }
-        })();
-    }
-</script>
-
+<link rel="stylesheet" href="../asset/css/inline-input.css">
+<link rel="stylesheet" href="../asset/css/fadein.css">
 <link rel="stylesheet" href="../asset/css/material-icon.css">
 <link rel="stylesheet" href="../asset/css/vuetify.min.css">
 <link rel="stylesheet" href="../asset/css/roboto-font.css">
@@ -172,11 +140,13 @@
                                   :search="search"
                                   :pagination.sync="pagination">
                         <template slot="items" slot-scope="props">
-                            <td>{{ props.item.SupplierStockId }}</td>
-                            <td>{{ props.item.StockId }}</td>
-                            <td>{{ props.item.Name }}</td>
+                            <td>{{ props.item.WarehouseStockId }}</td>
+                            <td>{{ props.item.StockName }}</td>
                             <td>{{ props.item.Amount }}</td>
                             <td class="layout px-0">
+                                <v-btn icon class="mx-0" @click="editStock(props.item)">
+                                    <v-icon color="teal">edit</v-icon>
+                                </v-btn>
                                 <v-btn icon class="mx-0" @click="deleteStock(props.item)">
                                     <v-icon color="pink">delete</v-icon>
                                 </v-btn>
@@ -223,6 +193,7 @@
                             <template slot="items" slot-scope="props">
                                 <td>{{ props.item.StockId }}</td>
                                 <td>{{ props.item.Name }}</td>
+                                <td>{{ props.item.ManagerName }}</td>
                                 <td class="layout px-0">
                                     <v-input style="max-width: 80px" class="ma-2">
                                         <input class="pa-1 inline-input" type="number"
@@ -252,6 +223,45 @@
 
         </div>
         <!-- Main page end -->
+
+        <!-- Edit Dialog start -->
+        <v-dialog v-model="editDialog" max-width="500px">
+            <v-form @submit.prevent="save" ref="form" v-model="valid" lazy-validation>
+                <v-card>
+                    <v-card-title>
+                        <span class="headline">Update Stock</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container fluid>
+
+
+                            <v-layout row>
+                                <v-flex xs4>
+                                    <v-subheader>Amount</v-subheader>
+                                </v-flex>
+                                <v-flex xs8>
+                                    <v-text-field
+                                            v-model="itemToEdit.EditAmount"
+                                            label="Amount"
+                                            persistent-hint
+                                            type="number"
+                                            min="1"
+                                            :rules="amountRules"
+                                            required
+                                    ></v-text-field>
+                                </v-flex>
+                            </v-layout>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="blue darken-1" flat @click.native="close">Cancel</v-btn>
+                        <v-btn color="blue darken-1" flat type="submit">Save</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-form>
+        </v-dialog>
+        <!-- Edit Dialog end -->
 
 
         <v-dialog
@@ -308,6 +318,13 @@
 <script src="../asset/js/vue.js"></script>
 <script src="../asset/js/vuetify.js"></script>
 <script src="../asset/js/axios.js"></script>
+<script src="../asset/js/fadein.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fadeIn(document.getElementById("app"))
+    }, false);
+</script>
 
 
 <script>
@@ -341,12 +358,14 @@
         },
 
         data: () => ({
+            valid: true,
             WarehouseStaffId: '',
             WarehouseStaffName: '',
             drawer: true,
             dataLoading: false, //Loading state
             stockLoading: false, //Loading state
             addDialog: false, //Add dialog
+            editDialog: false, //Edit dialog
             errorDialog: false, //Error dialog
             confirmDialog: false,
             search: "",
@@ -359,9 +378,6 @@
                     text: 'Id',
                     align: 'left',
                     value: 'SupplierStockId'
-                }, {
-                    text: 'Stock Id',
-                    value: 'StockId'
                 }, {
                     text: 'Stock Name',
                     value: 'Name'
@@ -384,6 +400,9 @@
                     text: 'Stock Name',
                     value: 'Name'
                 }, {
+                    text: 'Manager',
+                    value: 'ManagerName'
+                }, {
                     text: 'Actions',
                     value: 'name',
                     sortable: false
@@ -391,7 +410,12 @@
             ],
             stocks: [],
             supplierStock: [],
-            itemToDelete: {}
+            itemToDelete: {},
+            itemToEdit: {},
+            amountRules: [
+                v => !!v || "Amount is required",
+                v => v > 0 || "Minimum amount is 1",
+            ]
 
         }),
 
@@ -403,6 +427,23 @@
         },
 
         methods: {
+            save() {
+                axios({
+                    method: 'patch',
+                    url: '../api/WarehouseWarehouseStock.php',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {WarehouseStockId: this.itemToEdit.WarehouseStockId, Amount: this.itemToEdit.EditAmount}
+                }).then(res => {
+                    if (res.data.success) {
+                        this.loadData();
+                    } else {
+                        this.showError(res.data.error)
+                    }
+                });
+                this.editDialog = false;
+            },
 
             confirmDelete() {
                 axios({
@@ -411,7 +452,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    data: {SupplierStockId: this.itemToDelete.SupplierStockId}
+                    data: {WarehouseStockId: this.itemToDelete.WarehouseStockId}
                 }).then(res => {
                     if (res.data.success) {
                         this.loadData();
@@ -426,6 +467,13 @@
                 this.itemToDelete = item;
                 this.confirmDialog = true;
             },
+
+            editStock(item) {
+                item.EditAmount = item.Amount;
+                this.itemToEdit = item;
+                this.editDialog = true;
+            },
+
 
             showAdd() {
                 this.loadStock();
@@ -501,10 +549,6 @@
             },
             errOk() {
                 this.errorDialog = false
-            },
-
-            addItem() {
-                this.editDialog = true;
             },
 
             close() {

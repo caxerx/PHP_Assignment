@@ -31,3 +31,5 @@ class Response
         die(json_encode($data));
     }
 }
+
+?>

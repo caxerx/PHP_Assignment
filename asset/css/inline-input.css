@@ -1,0 +1,9 @@
+.inline-input {
+    border-bottom: solid grey 2px;
+    transition: border-bottom 0.25s;
+    font-size: 90%;
+}
+
+.inline-input:focus {
+    border-bottom: solid black 2px
+}

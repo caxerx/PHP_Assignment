@@ -7,31 +7,9 @@
 </head>
 
 
-<style>
-    #app {
-        opacity: 0;
-    }
-</style>
-
-<script>
-    function fadeIn(el, display) {
-        el.style.opacity = 0;
-        el.style.display = display || "block";
-
-        (function fade() {
-            var val = parseFloat(el.style.opacity);
-            if (!((val += .2) > 1)) {
-                el.style.opacity = val;
-                requestAnimationFrame(fade);
-            }
-        })();
-    }
-</script>
-
-
 <body>
 
-
+<link rel="stylesheet" href="asset/css/fadein.css">
 <link rel="stylesheet" href="asset/css/material-icon.css">
 <link rel="stylesheet" href="asset/css/vuetify.min.css">
 <link rel="stylesheet" href="asset/css/roboto-font.css">
@@ -85,6 +63,13 @@
 <script src="asset/js/vue.js"></script>
 <script src="asset/js/vuetify.js"></script>
 <script src="asset/js/axios.js"></script>
+<script src="asset/js/fadein.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fadeIn(document.getElementById("app"))
+    }, false);
+</script>
 
 
 <script>

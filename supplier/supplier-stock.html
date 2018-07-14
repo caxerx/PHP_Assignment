@@ -7,41 +7,9 @@
 </head>
 
 <body>
-<style>
-    #app {
-        opacity: 0;
-    }
 
-    .inline-input {
-        border-bottom: solid grey 2px;
-        transition: border-bottom 0.25s;
-        font-size: 90%;
-    }
-
-    .inline-input:focus {
-        border-bottom: solid black 2px
-    }
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        fadeIn(document.getElementById("app"))
-    }, false);
-
-    function fadeIn(el, display) {
-        el.style.opacity = 0;
-        el.style.display = display || "block";
-
-        (function fade() {
-            var val = parseFloat(el.style.opacity);
-            if (!((val += .2) > 1)) {
-                el.style.opacity = val;
-                requestAnimationFrame(fade);
-            }
-        })();
-    }
-</script>
-
+<link rel="stylesheet" href="../asset/css/inline-input.css">
+<link rel="stylesheet" href="../asset/css/fadein.css">
 <link rel="stylesheet" href="../asset/css/material-icon.css">
 <link rel="stylesheet" href="../asset/css/vuetify.min.css">
 <link rel="stylesheet" href="../asset/css/roboto-font.css">
@@ -308,6 +276,13 @@
 <script src="../asset/js/vue.js"></script>
 <script src="../asset/js/vuetify.js"></script>
 <script src="../asset/js/axios.js"></script>
+<script src="../asset/js/fadein.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fadeIn(document.getElementById("app"))
+    }, false);
+</script>
 
 
 <script>

@@ -15,8 +15,7 @@ class WarehouseWarehouseStock
 {
     function get($conn)
     {
-        $stmt = $conn->prepare("SELECT SupplierStock.SupplierStockId, Stock.StockId, Stock.Name, SupplierStock.Amount FROM SupplierStock LEFT JOIN Stock ON SupplierStock.StockId = Stock.StockId WHERE SupplierStock.SupplierId = ?;");
-        $stmt->bind_param("i", $_SESSION['warehouse']);
+        $stmt = $conn->prepare("SELECT WarehouseStockId, Stock.Name AS StockName, Amount FROM `WarehouseStock` LEFT JOIN Stock ON WarehouseStock.StockId = Stock.StockId");
         $stmt->execute();
         if ($rs = $stmt->get_result()) {
             $row = $rs->fetch_all(MYSQLI_ASSOC);
@@ -31,16 +30,16 @@ class WarehouseWarehouseStock
         isset($data["StockId"]) or Response::RequireFieldEmpty();
         isset($data["Amount"]) or Response::RequireFieldEmpty();
 
-        $stmt = $conn->prepare("SELECT * FROM `SupplierStock` WHERE `StockId` = ? AND `SupplierId` = ?;");
-        $stmt->bind_param("ii", $data["StockId"], $_SESSION['warehouse']);
+        $stmt = $conn->prepare("SELECT * FROM `WarehouseStock` WHERE `StockId` = ?;");
+        $stmt->bind_param("i", $data["StockId"]);
         $stmt->execute();
         $rs = $stmt->get_result();
         if ($rs && count($rs->fetch_all(MYSQLI_ASSOC)) > 0) {
-            Response::Fail("Already contains a Supplier Stock with Stock Id " . $data['StockId']);
+            Response::Fail("Already contains a Warehouse Stock with Stock Id " . $data['StockId']);
         } else {
             $stmt->close();
-            $stmt = $conn->prepare("INSERT INTO `SupplierStock` (`SupplierStockId`, `SupplierId`, `StockId`, `Amount`) VALUES (0, ?, ?, ?);");
-            $stmt->bind_param("iii", $_SESSION['supplier'], $data["StockId"], $data["Amount"]);
+            $stmt = $conn->prepare("INSERT INTO `WarehouseStock` (`WarehouseStockId`, `WarehouseStaffId`, `StockId`, `Amount`) VALUES (0, ?, ?, ?);");
+            $stmt->bind_param("iii", $_SESSION['warehouse'], $data["StockId"], $data["Amount"]);
             $stmt->execute();
             $stmt->close();
             Response::OK($data);
@@ -48,12 +47,26 @@ class WarehouseWarehouseStock
 
     }
 
+    function patch($conn, $data)
+    {
+        //UPDATE `WarehouseStock` SET `Amount` = '442' WHERE `WarehouseStock`.`WarehouseStockId` = 1;
+
+        isset($data["WarehouseStockId"]) or Response::RequireFieldEmpty();
+        isset($data["Amount"]) or Response::RequireFieldEmpty();
+
+        $stmt = $conn->prepare("UPDATE `WarehouseStock` SET `Amount` = ? WHERE `WarehouseStock`.`WarehouseStockId` = ?;");
+        $stmt->bind_param("ii", $data["Amount"], $data["WarehouseStockId"]);
+        $stmt->execute();
+        $stmt->close();
+        Response::OK($data);
+    }
+
     function delete($conn, $data)
     {
-        isset($data["SupplierStockId"]) or Response::RequireFieldEmpty();
+        isset($data["WarehouseStockId"]) or Response::RequireFieldEmpty();
 
-        $stmt = $conn->prepare("DELETE FROM `SupplierStock` WHERE `SupplierStockId` = ?;");
-        $stmt->bind_param("i", $data["SupplierStockId"]);
+        $stmt = $conn->prepare("DELETE FROM `WarehouseStock` WHERE `WarehouseStockId` = ?;");
+        $stmt->bind_param("i", $data["WarehouseStockId"]);
         $stmt->execute();
         $stmt->close();
         Response::OK($data);
