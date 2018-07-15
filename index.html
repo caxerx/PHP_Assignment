@@ -27,12 +27,15 @@
                                     <v-toolbar-title>{{role}} Login</v-toolbar-title>
                                     <v-spacer></v-spacer>
 
-                                    <v-btn icon @click="switchRole">
-                                        <v-icon>swap_horiz</v-icon>
-                                    </v-btn>
+                                    <v-tooltip top>
+                                        <v-btn icon @click="switchRole" slot="activator">
+                                            <v-icon>swap_horiz</v-icon>
+                                        </v-btn>
+                                        <span>Switch User Role</span>
+                                    </v-tooltip>
 
                                 </v-toolbar>
-                                <v-form @submit.prevent="login" ref="form" v-model="valid" lazy-validation>
+                                <v-form @submit.prevent="login" ref="form" v-model="valid" lazy-validation class="pa-3">
                                     <v-card-text>
                                         <v-text-field prepend-icon="person" name="login" :label="role+' Id'" type="text"
                                                       v-model="loginInfo.UserId" required
