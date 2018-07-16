@@ -115,7 +115,7 @@
 
                             <v-tooltip top>
                                 <v-btn icon @click="showAdd()" slot="activator">
-                                    <v-icon v-if="!stockLoading">add</v-icon>
+                                    <v-icon>add</v-icon>
                                 </v-btn>
                                 <span>Add Item</span>
                             </v-tooltip>
@@ -181,16 +181,20 @@
                                     v-model="stockSearch"
                             ></v-text-field>
                             <v-spacer></v-spacer>
-                            <v-btn icon @click="loadStock()">
-                                <v-icon v-if="!stockLoading">refresh</v-icon>
-                                <v-progress-circular
-                                        v-if="stockLoading"
-                                        indeterminate
-                                        color="white"
-                                        :size="25"
-                                        :width="3"
-                                ></v-progress-circular>
-                            </v-btn>
+                            <v-tooltip top>
+                                <v-btn icon @click="loadStock()" slot="activator">
+                                    <v-icon v-if="!stockLoading">refresh</v-icon>
+                                    <v-progress-circular
+                                            v-if="stockLoading"
+                                            indeterminate
+                                            color="white"
+                                            :size="25"
+                                            :width="3"
+                                    ></v-progress-circular>
+                                    <span>Refresh</span>
+                                </v-btn>
+                            </v-tooltip>
+
 
                         </v-toolbar>
 
