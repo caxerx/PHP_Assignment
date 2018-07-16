@@ -545,7 +545,7 @@
                 })
             },
             addStock(item) {
-                if (!item.amount || item.amount == 0) {
+                if (!item.amount || item.amount <= 0) {
                     return
                 }
                 axios({
