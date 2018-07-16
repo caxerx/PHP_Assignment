@@ -14,7 +14,6 @@ class WarehouseOrder
 {
     function get($conn)
     {
-        session_start();
         $stmt = $conn->prepare("SELECT Orders.OrderId, Suppliers.Name as SupplierName, Stock.Name, Orders.Amount, Orders.PurchaseDate, Orders.DeliveryDate, Orders.ReceivedDate FROM `Orders` LEFT JOIN SupplierStock ON Orders.SupplierStockId = SupplierStock.SupplierStockId LEFT JOIN Stock ON SupplierStock.StockId = Stock.StockId LEFT JOIN Suppliers ON SupplierStock.SupplierId=Suppliers.SupplierId WHERE Orders.DeliveryDate IS NOT NULL;");
         $stmt->execute();
         if ($rs = $stmt->get_result()) {
@@ -29,8 +28,8 @@ class WarehouseOrder
     {
         isset($data["OrderId"]) or die(Response::RequireFieldEmpty());
         isset($data["ReceivedDate"]) or die(Response::RequireFieldEmpty());
-        $stmt = $conn->prepare("UPDATE Orders SET ReceivedDate = ? WHERE OrderId = ?;");
-        $stmt->bind_param("si", $data["ReceivedDate"], $data["OrderId"]);
+        $stmt = $conn->prepare("UPDATE Orders SET `ReceivedDate` = ?, `WarehouseStaffId` = ? WHERE `OrderId` = ?;");
+        $stmt->bind_param("sii", $data["ReceivedDate"], $_SESSION['warehouse'], $data["OrderId"]);
         $stmt->execute();
         $stmt->close();
         Response::OK($data);
