@@ -214,9 +214,12 @@
                                                v-model="props.item.amount"
                                         >
                                     </v-input>
-                                    <v-btn icon class="mx-0" @click="addStock(props.item)">
-                                        <v-icon color="teal">add</v-icon>
-                                    </v-btn>
+                                    <v-tooltip top>
+                                        <v-btn icon class="mx-0" @click="addStock(props.item)">
+                                            <v-icon color="teal">add</v-icon>
+                                        </v-btn>
+                                        <span>Add stock</span>
+                                    </v-tooltip>
                                 </td>
                             </template>
 
