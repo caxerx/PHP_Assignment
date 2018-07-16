@@ -111,16 +111,19 @@
                             ></v-text-field>
                             <v-spacer></v-spacer>
 
-                            <v-btn icon @click="loadData()">
-                                <v-icon v-if="!dataLoading">refresh</v-icon>
-                                <v-progress-circular
-                                        v-if="dataLoading"
-                                        indeterminate
-                                        color="white"
-                                        :size="25"
-                                        :width="3"
-                                ></v-progress-circular>
-                            </v-btn>
+                            <v-tooltip top>
+                                <v-btn icon @click="loadData()" slot="activator">
+                                    <v-icon v-if="!dataLoading">refresh</v-icon>
+                                    <v-progress-circular
+                                            v-if="dataLoading"
+                                            indeterminate
+                                            color="white"
+                                            :size="25"
+                                            :width="3"
+                                    ></v-progress-circular>
+                                </v-btn>
+                                <span>Refresh</span>
+                            </v-tooltip>
 
 
                         </v-toolbar>
@@ -140,9 +143,12 @@
                             <td>{{ props.item.DeliveryDate }}</td>
                             <td>{{ props.item.ReceivedDate }}</td>
                             <td class="layout px-0">
-                                <v-btn icon class="mx-0" @click="editItem(props.item)">
-                                    <v-icon color="teal">check</v-icon>
-                                </v-btn>
+                                <v-tooltip top>
+                                    <v-btn icon class="mx-0" @click="editItem(props.item)" slot="activator">
+                                        <v-icon color="teal">check</v-icon>
+                                    </v-btn>
+                                    <span>Update delivery date</span>
+                                </v-tooltip>
                             </td>
                         </template>
 

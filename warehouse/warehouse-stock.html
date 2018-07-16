@@ -113,22 +113,27 @@
                             ></v-text-field>
                             <v-spacer></v-spacer>
 
-                            <v-btn icon @click="showAdd()">
-                                <v-icon v-if="!stockLoading">add</v-icon>
-                            </v-btn>
+                            <v-tooltip top>
+                                <v-btn icon @click="showAdd()" slot="activator">
+                                    <v-icon v-if="!stockLoading">add</v-icon>
+                                </v-btn>
+                                <span>Add Stock</span>
+                            </v-tooltip>
 
 
-                            <v-btn icon @click="loadData()">
-                                <v-icon v-if="!dataLoading">refresh</v-icon>
-                                <v-progress-circular
-                                        v-if="dataLoading"
-                                        indeterminate
-                                        color="white"
-                                        :size="25"
-                                        :width="3"
-                                ></v-progress-circular>
-                            </v-btn>
-
+                            <v-tooltip top>
+                                <v-btn icon @click="loadData()" slot="activator">
+                                    <v-icon v-if="!dataLoading">refresh</v-icon>
+                                    <v-progress-circular
+                                            v-if="dataLoading"
+                                            indeterminate
+                                            color="white"
+                                            :size="25"
+                                            :width="3"
+                                    ></v-progress-circular>
+                                </v-btn>
+                                <span>Refresh</span>
+                            </v-tooltip>
 
                         </v-toolbar>
                     </div>
@@ -144,12 +149,21 @@
                             <td>{{ props.item.StockName }}</td>
                             <td>{{ props.item.Amount }}</td>
                             <td class="layout px-0">
-                                <v-btn icon class="mx-0" @click="editStock(props.item)">
-                                    <v-icon color="teal">edit</v-icon>
-                                </v-btn>
-                                <v-btn icon class="mx-0" @click="deleteStock(props.item)">
-                                    <v-icon color="pink">delete</v-icon>
-                                </v-btn>
+                                <v-tooltip top>
+                                    <v-btn icon class="mx-0" @click="editStock(props.item)" slot="activator">
+                                        <v-icon color="teal">edit</v-icon>
+                                    </v-btn>
+                                    <span>Edit</span>
+                                </v-tooltip>
+
+                                <v-tooltip top>
+                                    <v-btn icon class="mx-0" @click="deleteStock(props.item)" slot="activator">
+                                        <v-icon color="pink">delete</v-icon>
+                                    </v-btn>
+                                    <span>Delete</span>
+                                </v-tooltip>
+
+
                             </td>
                         </template>
 
@@ -377,10 +391,10 @@
                 {
                     text: 'Id',
                     align: 'left',
-                    value: 'SupplierStockId'
+                    value: 'WarehouseStockId'
                 }, {
                     text: 'Stock Name',
-                    value: 'Name'
+                    value: 'StockName'
                 }, {
                     text: 'Amount',
                     value: 'Amount'
